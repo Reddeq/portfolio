@@ -67,9 +67,14 @@ function stopTransition(){
 function makeRain(){
  const glyphs="01アイウエオカキクケコサシスセソΞΔλ<>/×";
  const frag=document.createDocumentFragment();
- for(let i=0;i<24;i++){
-   const col=document.createElement("span");col.className="rain-column";col.style.setProperty("--lag",-(i%5)*35+"ms");
-   col.textContent=Array.from({length:42},()=>glyphs[Math.floor(Math.random()*glyphs.length)]).join("\n");
+ const width=rain.clientWidth||viewport.clientWidth||320;
+ const height=rain.clientHeight||viewport.clientHeight||300;
+ const columns=Math.max(1,Math.floor(width/14));
+ const rows=Math.max(42,Math.ceil(height*2.25/15));
+ rain.style.setProperty("--columns",String(columns));
+ for(let i=0;i<columns;i++){
+   const col=document.createElement("span");col.className="rain-column";col.style.setProperty("--lag",-(i%7)*19+"ms");
+   col.textContent=Array.from({length:rows},()=>glyphs[Math.floor(Math.random()*glyphs.length)]).join("\n");
    frag.append(col);
  }
  rain.replaceChildren(frag);

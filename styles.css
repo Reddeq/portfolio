@@ -59,9 +59,11 @@ body{min-height:100vh;background:#090610}
 .console-title{padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);color:var(--violet);font-size:11px}
 .console-panel #terminal-output{height:min(180px,28dvh);font-size:12px}
 .glitch{position:absolute;inset:37px 0 26px;z-index:3;pointer-events:none;overflow:hidden;opacity:0;visibility:hidden;background:#160b25}
-.glitch-rain{position:absolute;inset:0;display:grid;grid-template-columns:repeat(24,1fr);gap:3px;overflow:hidden;mask-image:linear-gradient(transparent,#000 20%,#000 80%,transparent)}
-.rain-column{white-space:pre;font:12px/1.5 var(--mono);text-align:center;color:#c58aff;opacity:.45;transform:translateY(-35%);animation:none}
-.rain-column:nth-child(4n){color:#7dd7e8;opacity:.4}
+.glitch-rain{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--columns,24),minmax(0,1fr));gap:0;align-items:start;overflow:hidden;mask-image:linear-gradient(transparent,#000 12%,#000 88%,transparent)}
+.rain-column{white-space:pre;font:12px/15px var(--mono);text-align:center;color:#c58aff;opacity:.68;transform:translateY(-45%);animation:none}
+.rain-column:nth-child(4n){color:#7dd7e8;opacity:.52}
+.rain-column:nth-child(3n){opacity:.86}
+.rain-column:nth-child(5n){opacity:.42}
 .glitch-slices{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 18px,#a66aff25 18px 20px,transparent 20px 29px,#7dd7e81a 29px 31px);mix-blend-mode:screen}
 .glitch-label{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 16px;background:#120a20df;border:1px solid #9f67df;font:11px var(--mono);letter-spacing:.1em;color:#e7c8ff;white-space:nowrap;text-shadow:1px 0 #e67eff,-1px 0 #7dd7e8}
 .netrunner .screen::after{content:"";position:absolute;inset:37px 0 26px;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,#0000 0 3px,#00000018 3px 4px)}
@@ -70,7 +72,7 @@ body{min-height:100vh;background:#090610}
 .screen.switching .glitch-slices{animation:slice-shift 400ms steps(5,end) both}
 .screen.switching .viewport{animation:module-shift 400ms linear both}
 @keyframes decode-overlay{0%{opacity:0}25%{opacity:.86}47%{opacity:.94}75%{opacity:.43}100%{opacity:0}}
-@keyframes rain-fall{from{transform:translateY(-55%)}to{transform:translateY(8%)}}
+@keyframes rain-fall{from{transform:translateY(-45%)}to{transform:translateY(-5%)}}
 @keyframes slice-shift{0%{transform:translateX(-3%)}35%{transform:translateX(2%)}60%{transform:translateX(-1%)}100%{transform:none}}
 @keyframes module-shift{0%,100%{transform:none;filter:none}22%{transform:translateX(-3px);filter:drop-shadow(2px 0 #d66bff55)}40%{transform:translateX(2px);filter:drop-shadow(-2px 0 #7dd7e855)}70%{transform:none;filter:none}}
 .netrunner .ambient-grid{animation:travel 8s linear infinite}
