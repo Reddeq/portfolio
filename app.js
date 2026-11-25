@@ -35,7 +35,7 @@ function routeFor(hash){
 }
 function consoleOpen(open,focus=false){
  panel.hidden=!open;toggle.setAttribute("aria-expanded",String(open));
- if(focus)(open?input:toggle).focus();
+ if(focus||(!open&&panel.contains(document.activeElement)))(open?input:toggle).focus({preventScroll:true});
  if(open)output.scrollTop=output.scrollHeight;
 }
 function line(value,className){
@@ -43,11 +43,13 @@ function line(value,className){
  output.append(p);while(output.children.length>80)output.firstElementChild.remove();output.scrollTop=output.scrollHeight;
 }
 function apply(route){
+ const previous=document.activeElement?.closest(".module");
  for(const section of document.querySelectorAll(".module"))section.hidden=section.id!==route.module;
  for(const link of document.querySelectorAll("[data-module]")){
    if(link.dataset.module===route.module)link.setAttribute("aria-current","page");
    else link.removeAttribute("aria-current");
  }
+ if(previous&&previous.id!==route.module)screen.focus({preventScroll:true});
  activeModule=route.module;breadcrumb.textContent="ROOT / "+modules[activeModule];
  document.title="REDDEQ // "+modules[activeModule]+" — DTP & Automation";
  for(const card of document.querySelectorAll("[data-selected]"))card.removeAttribute("data-selected");
