@@ -14,16 +14,22 @@ const state=document.querySelector("#screen-state");
 const decodeName=document.querySelector("#decode-name");
 const rain=document.querySelector(".glitch-rain");
 const reduced=matchMedia("(prefers-reduced-motion: reduce)");
-const modules={home:"NEXUS",archive:"ARCHIVE",toolchain:"TOOLCHAIN",lab:"LABORATORY",contact:"UPLINK"};
-const routes={dtp:"archive",archive:"archive",dev:"toolchain",toolchain:"toolchain",lab:"lab",contact:"contact",home:"home",nexus:"home",uplink:"contact"};
+const environment=root.dataset.environment||"gateway";
+const envNames={gateway:"NEXUS",dtp:"ARCHIVE",automation:"TOOLCHAIN"};
+const envName=envNames[environment];
+const pageTitle=document.title;
+const prompt="visitor@"+envName.toLowerCase()+":~$ ";
+const modules=Object.fromEntries([...document.querySelectorAll(".module")].map(s=>[s.id,document.querySelector('[data-module="'+s.id+'"]')?.dataset.label||"HOME"]));
+const routes=environment==="dtp"?{home:"home",works:"archive",archive:"archive",skills:"skills",workflow:"workflow",contact:"contact"}:environment==="automation"?{home:"home",projects:"toolchain",toolchain:"toolchain",stack:"skills",skills:"skills",lab:"lab",contact:"contact"}:{home:"home"};
+const external=environment==="gateway"?{dtp:"./dtp/",dev:"./automation/",automation:"./automation/"}:{nexus:"../",gateway:"../",dtp:"../dtp/",dev:"../automation/",automation:"../automation/"};
 const responses={
- help:"COMMANDS\nhelp · whoami · ls · dtp · dev · lab · contact · home · clear\nКоманды открывают модули внутри экрана.",
- whoami:"REDDEQ / Document Engineering · DTP · Automation",
- ls:"/archive     DTP & Design\n/toolchain   Automation\n/lab         Laboratory\n/contact     Uplink",
+ help:"COMMANDS\nhelp · whoami · ls · "+Object.keys(routes).join(" · ")+" · "+Object.keys(external).join(" · ")+" · clear",
+ whoami:environment==="dtp"?"REDDEQ / DTP · Document Engineering":environment==="automation"?"REDDEQ / Automation · Development":"REDDEQ / NEXUS — DTP & Automation",
+ ls:environment==="gateway"?"/dtp  DTP Archive\n/automation  Toolchain":Object.entries(modules).map(([id,label])=>"/"+id+"  "+label).join("\n"),
  manul:"SECRET NODE FOUND\nฅ(•ㅅ•)ฅ MANUL.EXE is running..."
 };
 const owns=(obj,key)=>Object.prototype.hasOwnProperty.call(obj,key);
-let activeModule=null,swapTimer=0,endTimer=0,sequence=0;
+let activeModule=null,swapTimer=0,endTimer=0,sequence=0,departure=0;
 function routeFor(hash){
  let id=hash.replace(/^#/,"");
  try{id=decodeURIComponent(id);}catch{return {module:"home",target:null};}
@@ -50,8 +56,8 @@ function apply(route){
    else link.removeAttribute("aria-current");
  }
  if(previous&&previous.id!==route.module)screen.focus({preventScroll:true});
- activeModule=route.module;breadcrumb.textContent="ROOT / "+modules[activeModule];
- document.title="REDDEQ // "+modules[activeModule]+" — DTP & Automation";
+ activeModule=route.module;breadcrumb.textContent=envName+" / "+modules[activeModule];
+ document.title=activeModule==="home"?pageTitle:modules[activeModule]+" | "+pageTitle;
  for(const card of document.querySelectorAll("[data-selected]"))card.removeAttribute("data-selected");
  viewport.scrollTop=0;
  if(route.target){
@@ -80,6 +86,7 @@ function makeRain(){
  rain.replaceChildren(frag);
 }
 function navigate(hash,initial=false){
+ if(typeof departure!=="undefined"&&departure){clearTimeout(departure);departure=0;}
  const route=routeFor(hash),token=++sequence;
  stopTransition();
  if(hash==="#terminal")consoleOpen(true,!initial);
@@ -93,8 +100,9 @@ function go(id){const hash="#"+id;if(location.hash===hash)navigate(hash);else lo
 function execute(raw){
  const command=raw.trim().toLowerCase();if(!command)return;
  if(command==="clear"){output.replaceChildren();return;}
- line("visitor@nexus:~$ "+raw,"entered");
+ line(prompt+raw,"entered");
  if(owns(routes,command)){line("Opening /"+routes[command]);consoleOpen(false);go(routes[command]);}
+ else if(owns(external,command)){line("Connecting /"+command);consoleOpen(false);connect(external[command],command==="dtp"?"ARCHIVE":command==="dev"||command==="automation"?"TOOLCHAIN":"NEXUS");}
  else {line(owns(responses,command)?responses[command]:"Unknown command. Type help.");consoleOpen(true);}
 }
 function setMode(active){
@@ -121,3 +129,25 @@ let enabled=true;try{enabled=localStorage.getItem("nexus-mode")!=="off";}catch{}
 setMode(enabled);
 mode.addEventListener("click",()=>setMode(mode.getAttribute("aria-pressed")!=="true"));
 root.classList.add("js");navigate(location.hash,true);
+
+// Cross-environment navigation uses real URLs; normal links work without JS.
+function connect(url,label){
+ if(departure)clearTimeout(departure);
+ if(!root.classList.contains("netrunner")||reduced.matches){location.assign(url);return;}
+ ++sequence;stopTransition();consoleOpen(false);decodeName.textContent=label;state.textContent="CONNECTING...";
+ makeRain();void screen.offsetWidth;screen.classList.add("switching");
+ departure=setTimeout(()=>{departure=0;location.assign(url);},260);
+}
+document.querySelectorAll("a[data-environment]").forEach(link=>link.addEventListener("click",event=>{
+ if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+ event.preventDefault();connect(link.href,link.dataset.environment);
+}));
+window.addEventListener("pageshow",event=>{if(event.persisted){clearTimeout(departure);departure=0;stopTransition();navigate(location.hash,true);}});
+const legacyDtp=["archive","july","apo100","chinese"];
+const legacyDev=["toolchain","lab","pdfconverter","overlay","office","utility","pocket","desktop"];
+if(environment==="gateway"){
+ const id=location.hash.slice(1);
+ if(legacyDtp.includes(id))location.replace("./dtp/"+location.hash);
+ else if(legacyDev.includes(id))location.replace("./automation/"+location.hash);
+}
+
