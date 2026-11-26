@@ -22,9 +22,10 @@ const pageTitle=document.title;
 const prompt="visitor@"+envName.toLowerCase()+":~$ ";
 const modules=Object.fromEntries([...document.querySelectorAll(".module")].map(s=>[s.id,document.querySelector('[data-module="'+s.id+'"]')?.dataset.label||"HOME"]));
 const routes=environment==="dtp"?{home:"home",works:"archive",archive:"archive",skills:"skills",profile:"profile",experience:"profile",contact:"contact"}:environment==="automation"?{home:"home",projects:"toolchain",toolchain:"toolchain",stack:"skills",skills:"skills",lab:"lab",contact:"contact"}:{home:"home"};
-const external=environment==="gateway"?{dtp:"./dtp/",dev:"./automation/",automation:"./automation/"}:{nexus:"../",gateway:"../",dtp:"../dtp/",dev:"../automation/",automation:"../automation/"};
+// Temporary: DTP is a standalone public portfolio until Automation is ready.
+const external=environment==="dtp"?{}:environment==="gateway"?{dtp:"./dtp/",dev:"./automation/",automation:"./automation/"}:{nexus:"../",gateway:"../",dtp:"../dtp/",dev:"../automation/",automation:"../automation/"};
 const responses={
- help:"COMMANDS\nhelp · whoami · ls · "+Object.keys(routes).join(" · ")+" · "+Object.keys(external).join(" · ")+" · clear",
+ help:"COMMANDS\n"+["help","whoami","ls",...Object.keys(routes),...Object.keys(external),"clear"].join(" · "),
  whoami:environment==="dtp"?"Олег Шавловский / REDDEQ — DTP · Document Engineering":environment==="automation"?"REDDEQ / Automation · Development":"REDDEQ / NEXUS — DTP & Automation",
  ls:environment==="gateway"?"/dtp  DTP Archive\n/automation  Toolchain":Object.entries(modules).map(([id,label])=>"/"+id+"  "+label).join("\n"),
  manul:"SECRET NODE FOUND\nฅ(•ㅅ•)ฅ MANUL.EXE is running..."
