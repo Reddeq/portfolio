@@ -21,11 +21,11 @@ const envName=envNames[environment];
 const pageTitle=document.title;
 const prompt="visitor@"+envName.toLowerCase()+":~$ ";
 const modules=Object.fromEntries([...document.querySelectorAll(".module")].map(s=>[s.id,document.querySelector('[data-module="'+s.id+'"]')?.dataset.label||"HOME"]));
-const routes=environment==="dtp"?{home:"home",works:"archive",archive:"archive",skills:"skills",contact:"contact"}:environment==="automation"?{home:"home",projects:"toolchain",toolchain:"toolchain",stack:"skills",skills:"skills",lab:"lab",contact:"contact"}:{home:"home"};
+const routes=environment==="dtp"?{home:"home",works:"archive",archive:"archive",skills:"skills",profile:"profile",experience:"profile",contact:"contact"}:environment==="automation"?{home:"home",projects:"toolchain",toolchain:"toolchain",stack:"skills",skills:"skills",lab:"lab",contact:"contact"}:{home:"home"};
 const external=environment==="gateway"?{dtp:"./dtp/",dev:"./automation/",automation:"./automation/"}:{nexus:"../",gateway:"../",dtp:"../dtp/",dev:"../automation/",automation:"../automation/"};
 const responses={
  help:"COMMANDS\nhelp · whoami · ls · "+Object.keys(routes).join(" · ")+" · "+Object.keys(external).join(" · ")+" · clear",
- whoami:environment==="dtp"?"REDDEQ / DTP · Document Engineering":environment==="automation"?"REDDEQ / Automation · Development":"REDDEQ / NEXUS — DTP & Automation",
+ whoami:environment==="dtp"?"Олег Шавловский / REDDEQ — DTP · Document Engineering":environment==="automation"?"REDDEQ / Automation · Development":"REDDEQ / NEXUS — DTP & Automation",
  ls:environment==="gateway"?"/dtp  DTP Archive\n/automation  Toolchain":Object.entries(modules).map(([id,label])=>"/"+id+"  "+label).join("\n"),
  manul:"SECRET NODE FOUND\nฅ(•ㅅ•)ฅ MANUL.EXE is running..."
 };
