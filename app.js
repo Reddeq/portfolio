@@ -5,7 +5,8 @@ const viewport=document.querySelector("#viewport");
 const output=document.querySelector("#terminal-output");
 const form=document.querySelector("#terminal-form");
 const input=document.querySelector("#command");
-const mode=document.querySelector("#mode");
+const sound=document.querySelector("#sound-toggle");
+const soundtrack=document.querySelector("#soundtrack");
 const panel=document.querySelector("#console-panel");
 const toggle=document.querySelector("#console-toggle");
 const close=document.querySelector("#console-close");
@@ -20,7 +21,7 @@ const envName=envNames[environment];
 const pageTitle=document.title;
 const prompt="visitor@"+envName.toLowerCase()+":~$ ";
 const modules=Object.fromEntries([...document.querySelectorAll(".module")].map(s=>[s.id,document.querySelector('[data-module="'+s.id+'"]')?.dataset.label||"HOME"]));
-const routes=environment==="dtp"?{home:"home",works:"archive",archive:"archive",skills:"skills",workflow:"workflow",contact:"contact"}:environment==="automation"?{home:"home",projects:"toolchain",toolchain:"toolchain",stack:"skills",skills:"skills",lab:"lab",contact:"contact"}:{home:"home"};
+const routes=environment==="dtp"?{home:"home",works:"archive",archive:"archive",skills:"skills",contact:"contact"}:environment==="automation"?{home:"home",projects:"toolchain",toolchain:"toolchain",stack:"skills",skills:"skills",lab:"lab",contact:"contact"}:{home:"home"};
 const external=environment==="gateway"?{dtp:"./dtp/",dev:"./automation/",automation:"./automation/"}:{nexus:"../",gateway:"../",dtp:"../dtp/",dev:"../automation/",automation:"../automation/"};
 const responses={
  help:"COMMANDS\nhelp · whoami · ls · "+Object.keys(routes).join(" · ")+" · "+Object.keys(external).join(" · ")+" · clear",
@@ -62,7 +63,12 @@ function apply(route){
  viewport.scrollTop=0;
  if(route.target){
    const card=route.target.closest(".project");
-   if(card){card.setAttribute("data-selected","");const details=card.querySelector("details");if(details)details.open=true;}
+   if(card){
+     card.setAttribute("data-selected","");
+     const details=card.querySelector("details");if(details)details.open=true;
+     // A linked preview should load immediately even during the module transition.
+     for(const image of card.querySelectorAll(".case-pair img[loading=lazy]"))image.loading="eager";
+   }
    viewport.scrollTop=route.target.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop-16;
  }
 }
@@ -105,10 +111,44 @@ function execute(raw){
  else if(owns(external,command)){line("Connecting /"+command);consoleOpen(false);connect(external[command],command==="dtp"?"ARCHIVE":command==="dev"||command==="automation"?"TOOLCHAIN":"NEXUS");}
  else {line(owns(responses,command)?responses[command]:"Unknown command. Type help.");consoleOpen(true);}
 }
-function setMode(active){
- root.classList.toggle("netrunner",active);mode.setAttribute("aria-pressed",String(active));mode.textContent="NETRUNNER: "+(active?"ON":"OFF");
- try{localStorage.setItem("nexus-mode",active?"on":"off");}catch{}
- if(!active&&screen.classList.contains("switching"))navigate(location.hash,true);
+function setUpSound(){
+ const preference="nexus-sound", position="nexus-sound-position";
+ let requested=false, attempt=0;
+ function show(playing){
+   sound.textContent=playing?"SOUND ON":"SOUND OFF";
+   sound.setAttribute("aria-pressed",String(playing));
+ }
+ function savePosition(){
+   try{sessionStorage.setItem(position,String(soundtrack.currentTime));}catch{}
+ }
+ function restorePosition(){
+   let saved=0;try{saved=Number(sessionStorage.getItem(position));}catch{}
+   if(Number.isFinite(saved)&&saved>0&&saved<soundtrack.duration)soundtrack.currentTime=saved;
+ }
+ async function play(){
+   const token=++attempt;requested=true;
+   try{await soundtrack.play();}
+   catch{
+     if(token===attempt){requested=false;show(false);}
+   }
+ }
+ function restorePreference(){
+   try{if(localStorage.getItem(preference)==="on")play();}catch{}
+ }
+ soundtrack.volume=.25;
+ soundtrack.addEventListener("loadedmetadata",restorePosition,{once:true});
+ soundtrack.addEventListener("playing",()=>show(!soundtrack.paused));
+ soundtrack.addEventListener("pause",()=>show(!soundtrack.paused));
+ sound.addEventListener("click",()=>{
+   const enable=!requested;
+   try{localStorage.setItem(preference,enable?"on":"off");}catch{}
+   if(enable){play();return;}
+   ++attempt;requested=false;soundtrack.pause();show(false);savePosition();
+ });
+ window.addEventListener("pagehide",()=>{savePosition();++attempt;requested=false;soundtrack.pause();});
+ window.addEventListener("pageshow",event=>{if(event.persisted){restorePosition();restorePreference();}});
+ sound.hidden=false;
+ restorePreference();
 }
 form.addEventListener("submit",event=>{event.preventDefault();execute(input.value);input.value="";});
 document.querySelectorAll("[data-command]").forEach(button=>button.addEventListener("click",()=>execute(button.dataset.command)));
@@ -125,9 +165,8 @@ document.querySelectorAll('a[href^="#"]').forEach(link=>link.addEventListener("c
 }));
 window.addEventListener("hashchange",()=>navigate(location.hash));
 reduced.addEventListener?.("change",()=>{if(reduced.matches&&screen.classList.contains("switching"))navigate(location.hash,true);});
-let enabled=true;try{enabled=localStorage.getItem("nexus-mode")!=="off";}catch{}
-setMode(enabled);
-mode.addEventListener("click",()=>setMode(mode.getAttribute("aria-pressed")!=="true"));
+root.classList.add("netrunner");
+setUpSound();
 root.classList.add("js");navigate(location.hash,true);
 
 // Cross-environment navigation uses real URLs; normal links work without JS.
